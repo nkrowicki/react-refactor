@@ -1,19 +1,5 @@
 import { DeleteIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  Center,
-  Checkbox,
-  Flex,
-  FormControl,
-  Heading,
-  IconButton,
-  Input,
-  List,
-  ListItem,
-  Spacer,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Button, Center, Flex, FormControl, Heading, Input } from "@chakra-ui/react";
 import { SyntheticEvent, useEffect, useState } from "react";
 
 import { ToDoItem } from "./types/ToDoItem";
@@ -44,7 +30,7 @@ function ToDoList() {
       });
       const data = await response.json();
       if (data) {
-        setToDoItems((prev) => [...prev, data]);
+        setToDoItems(prev => [...prev, data]);
         setNewItemDescription("");
       }
     }
@@ -52,30 +38,28 @@ function ToDoList() {
     createItem();
   }
 
-  function handleDeleteItem(id: number, index: number): void {
+  function handleDeleteItem(id: number): void {
     async function deleteItem() {
       const response = await fetch(`http://localhost:3001/items/${id}`, {
         method: "DELETE",
       });
-      setToDoItems((prev) => [
-        ...prev.slice(0, index),
-        ...prev.slice(index + 1),
-      ]);
+      setToDoItems(prev => [...prev.filter(item => item.id !== id)]);
     }
 
     deleteItem();
   }
 
-  function handleToggleItem(id: number, index: number): void {
+  function handleToggleItem(id: number): void {
     async function toggleItem() {
       const response = await fetch(`http://localhost:3001/items/${id}/toggle`, {
         method: "PUT",
       });
-      setToDoItems((prev) => [
-        ...prev.slice(0, index),
-        { ...prev[index], completed: !prev[index].completed },
-        ...prev.slice(index + 1),
-      ]);
+      const indexOldItem = toDoItems.findIndex(item => item.id === id);
+      const oldItem = toDoItems[indexOldItem];
+      const newItem = { ...oldItem, completed: !oldItem.completed };
+      const newToDoItemsList = toDoItems;
+      newToDoItemsList[indexOldItem] = newItem;
+      setToDoItems([...newToDoItemsList]);
     }
     toggleItem();
   }
@@ -88,70 +72,13 @@ function ToDoList() {
         </Box>
       </Center>
 
-      {/* <Center>
+      <Center>
         <Box width="640px">
-          <Table />
-        </Box>
-      </Center> */}
-      
-      {/* TODO replace the following block with the <Table /> component you create */}
-      <Center alignItems="baseline">
-        <Box width="640px">
-          <List>
-            <ListItem>
-              <Flex alignItems="center" color="gray.600" fontWeight={600}>
-                <Text
-                  fontSize={12}
-                  px={6}
-                  py={3}
-                  textTransform="uppercase"
-                  width={100}
-                >
-                  Done
-                </Text>
-                <Text fontSize={12} px={6} py={3} textTransform="uppercase">
-                  Description
-                </Text>
-                <Text
-                  fontSize={12}
-                  px={6}
-                  py={3}
-                  textTransform="uppercase"
-                ></Text>
-              </Flex>
-            </ListItem>
-            {toDoItems.map((item, index) => (
-              <ListItem key={item.id}>
-                <Flex
-                  alignItems="center"
-                  bg={index % 2 === 0 ? "gray.100" : "white"}
-                >
-                  <Checkbox
-                    isChecked={item.completed}
-                    onChange={() => handleToggleItem(item.id, index)}
-                    width={100}
-                    px={6}
-                    py={4}
-                  />
-                  <Text fontSize={16} px={6} py={4}>
-                    {item.description}
-                  </Text>
-                  <Spacer />
-                  <Box px={6} py={4}>
-                    <IconButton
-                      icon={<DeleteIcon />}
-                      aria-label="Delete this item"
-                      onClick={() => handleDeleteItem(item.id, index)}
-                      size="xs"
-                      background="gray.600"
-                      _hover={{ bg: "red.600" }}
-                      color="white"
-                    />
-                  </Box>
-                </Flex>
-              </ListItem>
-            ))}
-          </List>
+          <Table
+            dataToRender={toDoItems}
+            handleToggleItem={handleToggleItem}
+            handleDeleteItem={handleDeleteItem}
+          />
         </Box>
       </Center>
 
@@ -166,7 +93,7 @@ function ToDoList() {
                   placeholder="Enter a new to-do item"
                   autoFocus
                   value={newItemDescription}
-                  onChange={(e) => setNewItemDescription(e.target.value)}
+                  onChange={e => setNewItemDescription(e.target.value)}
                 />
               </FormControl>
               <Button type="submit" marginLeft={2}>
